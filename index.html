@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoiceType Local — 100% Offline AI Speech Recognition</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon">🎙️</div>
+        <div>
+          <div class="logo-title-row">
+            <h1>VoiceType Local</h1>
+            <span class="badge-local">100% Offline AI</span>
+          </div>
+          <p class="subtitle">On-device speech recognition powered by whisper.cpp & Metal</p>
+        </div>
+      </div>
+
+      <!-- Config Controls: Model & Language -->
+      <div class="header-selectors">
+        <!-- Model Selection -->
+        <div class="picker-group">
+          <label for="modelSelect">AI Model:</label>
+          <select id="modelSelect" title="Select local Whisper model">
+            <option value="tiny" selected>Whisper Tiny (75MB • Fastest)</option>
+            <option value="base">Whisper Base (142MB • Higher Accuracy)</option>
+          </select>
+        </div>
+
+        <!-- Language Selection -->
+        <div class="picker-group">
+          <label for="languageSelect">Language:</label>
+          <select id="languageSelect" title="Spoken language">
+            <option value="auto">Auto Detect Language</option>
+            <option value="en" selected>English</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+            <option value="es">Español (Spanish)</option>
+            <option value="fr">Français (French)</option>
+            <option value="de">Deutsch (German)</option>
+            <option value="zh">中文 (Chinese)</option>
+            <option value="ja">日本語 (Japanese)</option>
+            <option value="ru">Русский (Russian)</option>
+            <option value="pt">Português (Portuguese)</option>
+            <option value="it">Italiano (Italian)</option>
+            <option value="ar">العربية (Arabic)</option>
+          </select>
+        </div>
+      </div>
+    </header>
+
+    <!-- System Status & Model Card -->
+    <section class="system-card" id="systemCard">
+      <div class="system-status-left">
+        <span class="status-dot ready" id="statusDot"></span>
+        <div class="status-info">
+          <span class="status-title" id="statusTitle">Local Whisper Engine Ready</span>
+          <span class="status-subtitle" id="statusSubtitle">Hardware-accelerated via Apple Silicon Metal • Offline Capable</span>
+        </div>
+      </div>
+      <div class="system-status-right">
+        <button id="testMicBtn" class="btn-ghost" title="Check microphone access">Check Mic</button>
+      </div>
+    </section>
+
+    <!-- Error/Notice Banner (hidden by default) -->
+    <div id="noticeBanner" class="alert-banner hidden">
+      <span class="alert-icon">⚠️</span>
+      <span id="noticeMessage">Alert message appears here.</span>
+    </div>
+
+    <!-- Active Recording / Transcribing Indicator Box -->
+    <section class="recording-monitor hidden" id="recordingMonitor">
+      <!-- Live Recording View -->
+      <div class="monitor-content" id="recordingView">
+        <div class="recording-pulse">
+          <span class="recording-dot"></span>
+          <span class="recording-timer" id="recordingTimer">00:00</span>
+        </div>
+        
+        <!-- Animated Audio Waveform Bars -->
+        <div class="audio-wave" id="audioWave">
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+        </div>
+
+        <p class="monitor-hint">Recording audio from microphone... Click <strong>"Stop & Transcribe"</strong> when finished.</p>
+      </div>
+
+      <!-- Transcription Progress View -->
+      <div class="monitor-content hidden" id="transcribingView">
+        <div class="transcribe-spinner"></div>
+        <div class="transcribe-text">
+          <p class="transcribe-title">Transcribing with Local Whisper...</p>
+          <p class="transcribe-subtitle">Running locally on your CPU/GPU • Audio will not leave this device</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Primary Control Buttons -->
+    <section class="controls-area">
+      <button id="startBtn" class="btn btn-primary" title="Start recording your speech">
+        <span class="btn-icon">🎙️</span>
+        <span class="btn-label">Start Recording</span>
+      </button>
+
+      <button id="stopBtn" class="btn btn-secondary" disabled title="Stop recording and transcribe">
+        <span class="btn-icon">⏹️</span>
+        <span class="btn-label">Stop & Transcribe</span>
+      </button>
+    </section>
+
+    <!-- Model Accuracy Note -->
+    <div class="accuracy-note">
+      💡 <strong>Model Note:</strong> <em>Whisper Tiny</em> is ultra-fast and lightweight. For stronger recognition of Hindi or accented speech, switch to <em>Whisper Base</em> in the top menu. Transcription begins immediately after you stop recording.
+    </div>
+
+    <!-- Text Area & Actions -->
+    <main class="editor-section">
+      <div class="editor-toolbar">
+        <div class="stats">
+          <span id="wordCount">0 words</span>
+          <span class="stats-divider">•</span>
+          <span id="charCount">0 characters</span>
+          <span class="stats-divider" id="lastDurationDivider" style="display:none">•</span>
+          <span id="lastDuration" style="display:none">Inference: 0.0s</span>
+        </div>
+
+        <div class="action-buttons">
+          <button id="copyBtn" class="btn-small" title="Copy transcript to clipboard">
+            <span class="action-icon">📋</span> Copy
+          </button>
+          <button id="downloadBtn" class="btn-small" title="Download as .txt file">
+            <span class="action-icon">💾</span> Download .txt
+          </button>
+          <button id="clearBtn" class="btn-small btn-danger" title="Clear transcript">
+            <span class="action-icon">🗑️</span> Clear
+          </button>
+        </div>
+      </div>
+
+      <div class="textarea-wrapper">
+        <textarea
+          id="transcriptArea"
+          placeholder="Click 'Start Recording', speak into your microphone, then click 'Stop & Transcribe'. Your speech will be recognized 100% locally by Whisper and added here. You can also edit this text manually at any time."
+          spellcheck="true"
+        ></textarea>
+      </div>
+    </main>
+
+    <!-- Privacy Banner -->
+    <footer class="app-footer">
+      <div class="privacy-badge">
+        <span>🔒 <strong>Complete Privacy:</strong> All audio is captured and transcribed locally on your computer. Zero audio or transcript data is uploaded to any server.</span>
+      </div>
+    </footer>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
